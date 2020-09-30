@@ -62,8 +62,11 @@ intSites <- group_by(intSites, GTSP) %>%
 
 
 # Identify clones with relative abundances >= 1%
-abundantClones <- 
-  group_by(subset(intSites, relAbund >= 1), posid, timePoint) %>%
+abundantClones <- mutate(subset(intSites, relAbund >= 1), 
+                         posid2 = paste0(posid, '|', nearestFeature, '|',
+                                         nearestFeatureDist, '|', 
+                                         ifelse(nearestFeature %in% gt23::hg38.oncoGeneList, 'onco', 'notOnco'))) %>%
+  group_by(posid2, timePoint) %>%
   summarise(relAbund = relAbund) %>%
   ungroup() %>%
   spread(timePoint, relAbund)
