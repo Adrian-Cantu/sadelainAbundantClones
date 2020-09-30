@@ -1,0 +1,13 @@
+-Carry out a simulation to ask if expanded clones (>1%) are enriched in cancer associated genes. First, determine the fraction of the >1% set that are cancer associated. Then make a pool of all genes at integration sites. Draw the same number of genes 10,000 times randomly, and score the fraction that are cancer associated. Ask if the observed value is hard to get by chance.
+
+-Make a table listing all genes enriched by >1%, including patient of origin, sonic abundance, and cancer association (allOnco).
+
+-Make a table listing the most notable cases of longitudinal persistence.
+
+-Make a genomic features heat map. Probably longitudinal for each subject.
+
+-Check if we have old 454 data for this project.
+
+-Eventually we will need to upload to SRA, and make a supplementary table Integration Site Data Sets Used in This Study.
+
+ 
