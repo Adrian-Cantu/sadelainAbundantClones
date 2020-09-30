@@ -121,31 +121,27 @@ r <- bind_rows(lapply(1:100000, function(n){
 
 pVal <- 1 - sum(r$randomLower) / nrow(r)
 
-bins <- seq(0, 0.5, by = .01)
+bins <- seq(0, 0.5, by = 0.01)
 r$bin <- cut(r$pInOnco, breaks = c(-Inf, bins, Inf))
 r$binLabel <- sprintf("%.1f%%", bins[r$bin]*100)
 plotData <- group_by(r, binLabel) %>% summarise(n = n()) %>% ungroup()
 plotData$binLabel <- factor(as.character(plotData$binLabel), levels = sprintf("%.1f%%", bins*100))
 
-# 29%
+# Highlight percentage to meet or exceed.
 plotData$color <- factor(ifelse(plotData$binLabel == '29.0%', 1, 0))
 
-ggplot(plotData, aes(binLabel, n, fill = color)) + 
+oncoGeneSim <-
+  ggplot(plotData, aes(binLabel, n, fill = color)) + 
   geom_col() + 
   theme_bw() + 
   scale_fill_manual(values = c('gray25', 'dodgerblue1')) +
   scale_y_continuous(label = scales::comma) +
-  labs(x = 'Percent sites bins', y = 'Simulations') +
+  labs(x = 'Percent oncogenes', y = 'Simulations') +
   theme(axis.text.x = element_text(angle = 45, hjust = 1),
         axis.text = element_text(size = 14), axis.title=element_text(size=16),
         panel.border = element_blank(), panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"),
         legend.position = "none") 
 
-
-+
-  geom_segment(aes(x = 0, xend = 58, y = 0, yend = 0)) +
-  labs(x = 'Percent sites bins', y = 'Simulations')
-
-
+ggsave(oncoGeneSim, file = 'oncoGeneSim.pdf')
 
