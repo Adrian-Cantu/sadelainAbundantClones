@@ -77,7 +77,6 @@ if(! file.exists('intSites.RData')){
 }
 
 
-
 # Identify clones with relative abundances >= 1%
 a <- data.frame(subset(intSites1, relAbund >= 1))
 
