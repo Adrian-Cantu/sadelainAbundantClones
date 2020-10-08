@@ -93,6 +93,12 @@ abundantClonesSheet <- mutate(subset(data.frame(intSites1), posid %in% a$posid),
 openxlsx::write.xlsx(abundantClonesSheet, file = 'abundantClones.xlsx')
 
 
+abundantClones1 <- 
+  group_by(a, patient, posid) %>%
+  summarise(nTimePoints = n_distinct(timePoint)) %>%
+  ungroup() %>%
+  filter(nTimePoints == 1)
+
 abundantClones2 <- 
   group_by(a, patient, posid) %>%
   summarise(nTimePoints = n_distinct(timePoint)) %>%
@@ -134,11 +140,13 @@ abundantClonePlot2 <-
 ggsave(abundantClonePlot2, file = 'abundantClonePlot2.pdf', height = 8, width = 5, units = 'in')
 
 
-# a <- subset(a, posid %in% abundantClones2$posid)
-# intSites1 <- subset(intSites1, posid %in% abundantClones2$posid)
-# intSites2 <- subset(intSites2, posid %in% abundantClones2$posid)
-# intSites3 <- subset(intSites3, posid %in% abundantClones2$posid)
-# intSites4 <- subset(intSites4, posid %in% abundantClones2$posid)
+# If we want to look only at clones with abundances >= 1% at two or more time points 
+# we need to filter out the clones which reached 1% only once.
+#
+# intSites1 <- subset(intSites1, ! posid %in% abundantClones1$posid)
+# intSites2 <- subset(intSites2, ! posid %in% abundantClones1$posid)
+# intSites3 <- subset(intSites3, ! posid %in% abundantClones1$posid)
+# intSites4 <- subset(intSites4, ! posid %in% abundantClones1$posid)
 
 # Here we group intSites and record their maximum relative abundance because we do 
 # not want to double count sites which rise or fall above the threshold.
@@ -159,8 +167,6 @@ nearOncoTable <- bind_rows(lapply(list(list('method' = 1, data = intSites1),
                                  n_distinct(subset(maxRelAbund, maxRelAbund >= 1 & abs(nearestOncoFeatureDist) <= x)$posid),
                                  n_distinct(subset(maxRelAbund, maxRelAbund >= 1 & abs(nearestOncoFeatureDist) >  x)$posid)),
                                byrow = FALSE, nrow = 2)
-                   
-                   browser()
                    
                    tibble(method = d$method,
                           window = x, 
