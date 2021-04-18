@@ -58,15 +58,21 @@ n_distinct(subset(a, abs(nearestOncoFeatureDist) <= 50000)$posid) # Unique clone
 
 
 # Create a spreadsheet of relative abundances of abundant clones across time points.
+abundantClonesSheet <- filter(intSites, posid %in% a$posid) %>%
+                       select(patient, posid, timePoint, nearestFeature, nearestFeatureDist, estAbund, relAbund) %>%
+                       dplyr::rename(clone = posid)
+                              
+openxlsx::write.xlsx(abundantClonesSheet, file = 'output/abundantClones.xlsx')
+
+# Create a spreadsheet of relative abundances of abundant clones across time points.
 abundantClonesSheet <- mutate(subset(intSites, posid %in% a$posid), 
-                              clone = paste0(posid, '|', nearestFeature, '|',
-                                              ifelse(nearestFeature %in% oncoGeneList, 'onco', 'notOnco'))) %>%
+                              clone = paste0(patient, '|', posid, '|', nearestFeature)) %>%
   group_by(clone, timePoint) %>%
   summarise(relAbund = relAbund) %>%
   ungroup() %>%
   spread(timePoint, relAbund)
 
-openxlsx::write.xlsx(abundantClonesSheet, file = 'output/abundantClones.xlsx')
+openxlsx::write.xlsx(abundantClonesSheet, file = 'output/abundantClonesGrid.xlsx')
 
 
 # Identify clones which appear at a single timepoint and those that appear at more than 1 timepoint.
@@ -100,6 +106,7 @@ maxY[['Patient1']] <- 2/100  # 1.64
 maxY[['Patient2']] <- 2.6/100  # 2.55
 maxY[['Patient3']] <- 5.5/100  # 5.46
 maxY[['Patient4']] <- 15.5/100 # 15.23
+
 o <- lapply(split(d, d$patient), function(x){
        colors <- grDevices::colorRampPalette(RColorBrewer::brewer.pal(12, "Paired"))(n_distinct(x$posid))
        set.seed(1)
@@ -143,10 +150,10 @@ dev.off()
 
 # Create relative abundance plot across all time points from data objects 
 # captured from gene therapy report maker software.
-g1 <- ggplotGrob(readRDS('p1.rds'))
-g2 <- ggplotGrob(readRDS('p2.rds'))
-g3 <- ggplotGrob(readRDS('p3.rds'))
-g4 <- ggplotGrob(readRDS('p4.rds'))
+g1 <- ggplotGrob(readRDS('data/p1.rds'))
+g2 <- ggplotGrob(readRDS('data/p2.rds'))
+g3 <- ggplotGrob(readRDS('data/p3.rds'))
+g4 <- ggplotGrob(readRDS('data/p4.rds'))
 
 pdf(height = 6, width = 20, file = 'output/F3a.pdf')
 grid.arrange(g1, g2, g3, g4, ncol = 4)
