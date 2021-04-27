@@ -88,10 +88,12 @@ abundantClones2 <-
   ungroup() %>%
   filter(nTimePoints >= 2)
 
+# Add labelNearesFeature column. This is the nearest feature plus '*' if the 
+# insertion is inside the feature, plus '~' if it is close (50kbps) to an
+# oncofeature and '!' if it is close to a lymphomafeature
 intSites <- intSites %>%
   mutate(labeledNearestFeature = paste0(nearestFeature, ' ')) %>% 
   mutate(labeledNearestFeature = ifelse(inFeature, paste0(labeledNearestFeature, '*'), labeledNearestFeature)) 
-
 intSites <- mutate(intSites, labeledNearestFeature = ifelse(abs(nearestOncoFeatureDist) <= 50000, paste0(labeledNearestFeature, '~'), labeledNearestFeature))
 intSites <- mutate(intSites, labeledNearestFeature = ifelse(abs(nearestlymphomaFeatureDist) <= 50000, paste0(labeledNearestFeature, '!'), labeledNearestFeature)) 
 
