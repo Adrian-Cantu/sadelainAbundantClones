@@ -1,7 +1,7 @@
 library(tidyverse)
 library(RMySQL)
 library(gt23)
-library(STRINGdb)
+#library(STRINGdb)
 library(GenomicRanges)
 library(grid)
 library(gtable)
@@ -12,10 +12,76 @@ oncoGeneList <- toupper(c('UBR2', gt23::hg38.oncoGeneList))
 
 # Retrieve and annotate intSites.
 if(! file.exists('data/intSites.RData')){
+  #
+  #s <- c('GTSP1393','GTSP1699','GTSP2180','GTSP3310','GTSP3437','GTSP1395','GTSP1701',
+  #       'GTSP3622','GTSP2181','GTSP3311','GTSP1599','GTSP3309','GTSP3438','GTSP3626',
+  #       'GTSP3306','GTSP3308','GTSP3440')
   
-  s <- c('GTSP1393','GTSP1699','GTSP2180','GTSP3310','GTSP3437','GTSP1395','GTSP1701',
-         'GTSP3622','GTSP2181','GTSP3311','GTSP1599','GTSP3309','GTSP3438','GTSP3626',
-         'GTSP3306','GTSP3308','GTSP3440')
+  s <- c(
+    'GTSP0261',
+#    'GTSP0262',
+#    'GTSP0263',
+    'GTSP0353',
+#    'GTSP0354',
+    'GTSP0877',
+    'GTSP1393',
+#    'GTSP1394',
+    'GTSP1699',
+#    'GTSP1700',
+    'GTSP3620',
+#    'GTSP3621',
+    'GTSP2180',
+    'GTSP3310',
+    'GTSP3437',
+#    'GTSP0327',
+    'GTSP0328',
+ #   'GTSP0329',
+#    'GTSP0355',
+    'GTSP0356',
+    'GTSP0878',
+#    'GTSP0879',
+    'GTSP1395',
+#    'GTSP1396',
+    'GTSP1701',
+ #   'GTSP1702',
+    'GTSP3622',
+#    'GTSP3623',
+    'GTSP2181',
+    'GTSP3311',
+    'GTSP0881',
+    'GTSP0882',
+#    'GTSP0883',
+    'GTSP0884',
+#    'GTSP0885',
+#    'GTSP1598',
+    'GTSP1599',
+    'GTSP3624',
+#    'GTSP3625',
+    'GTSP3309',
+    'GTSP3438',
+#    'GTSP3439',
+    'GTSP3626',
+#    'GTSP3627',
+    'GTSP0886',
+    'GTSP0887',
+    'GTSP0890',
+    'GTSP0888',
+#    'GTSP0889',
+    'GTSP1600',
+    'GTSP1601',
+    'GTSP1602',
+    'GTSP1703',
+#    'GTSP1704',
+    'GTSP2182',
+    'GTSP3306',
+#    'GTSP3307',
+    'GTSP3308',
+    'GTSP3628',
+#    'GTSP3629',
+    'GTSP3440',
+    'GTSP4185'
+  )
+  
   
   intSites <- 
     getDBgenomicFragments(s, 'specimen_management', 'intsites_miseq') %>%
@@ -39,10 +105,11 @@ if(! file.exists('data/intSites.RData')){
     filter(cellsPerSample >= 100)
   
   intSites$nearestFeature <- toupper(intSites$nearestFeature)
-  
+  saveRDS(intSites,file='data/intSites_plus0.rds')
   save(intSites, file = 'data/intSites.RData')
 } else {
   load('data/intSites.RData')
+  intSites <- readRDS("data/intSites_plus0.rds")
 }
 
 
@@ -62,7 +129,7 @@ abundantClonesSheet <- filter(intSites, posid %in% a$posid) %>%
                        select(patient, posid, timePoint, nearestFeature, nearestFeatureDist, estAbund, relAbund) %>%
                        dplyr::rename(clone = posid)
                               
-openxlsx::write.xlsx(abundantClonesSheet, file = 'output/abundantClones.xlsx')
+#openxlsx::write.xlsx(abundantClonesSheet, file = 'output/abundantClones.xlsx')
 
 # Create a spreadsheet of relative abundances of abundant clones across time points.
 abundantClonesSheet <- mutate(subset(intSites, posid %in% a$posid), 
@@ -72,7 +139,7 @@ abundantClonesSheet <- mutate(subset(intSites, posid %in% a$posid),
   ungroup() %>%
   spread(timePoint, relAbund)
 
-openxlsx::write.xlsx(abundantClonesSheet, file = 'output/abundantClonesGrid.xlsx')
+#openxlsx::write.xlsx(abundantClonesSheet, file = 'output/abundantClonesGrid.xlsx')
 
 
 # Identify clones which appear at a single timepoint and those that appear at more than 1 timepoint.
