@@ -1,0 +1,24 @@
+---
+title: "scan_stats"
+output: pdf_document
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+header-includes: 
+  \usepackage{longtable}
+---
+
+Scan statistics using patient5 (later renamed patient4) time point 0 vs. all patients time point 70-72 months
+
+```{r setup, results='asis'}
+suppressMessages(library(GenomicRanges))
+knitr::opts_chunk$set(echo = TRUE)
+suppressMessages(library("tidyverse"))
+library(kableExtra)
+
+scan_tables <- readRDS("scan_table.rds")
+
+scan_tables %>%
+kable( "latex", booktabs = TRUE, longtable = TRUE, caption = "Scan Statistic") %>%
+  kable_styling(latex_options = c("hold_position", "repeat_header"))
+
+
+```

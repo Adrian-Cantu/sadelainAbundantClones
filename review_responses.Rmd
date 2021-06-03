@@ -1,0 +1,26 @@
+---
+title: "review_responses"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+source("fisher_exact_test.R")
+```
+
+
+
+
+
+```{r pressure, echo=FALSE}
+sample_name <- "GTSP0886"
+sample_df <- get_sample_df(sample_name)
+sample_mat <- get_f_mat(sample_df)
+chisq.test(sample_mat)$expected
+chisq.test(sample_mat)
+fisher.test(sample_mat)
+
+get_sample_figure(sample_df)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

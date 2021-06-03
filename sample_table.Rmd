@@ -1,0 +1,30 @@
+---
+title: "sample_tables"
+output: pdf_document
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+classoption: landscape
+header-includes: 
+  - \usepackage{longtable}
+  - \newcommand{\blandscape}{\begin{landscape}}
+  - \newcommand{\elandscape}{\end{landscape}}
+---
+
+
+<!-- \blandscape -->
+
+```{r setup, results='asis'}
+suppressMessages(library(GenomicRanges))
+knitr::opts_chunk$set(echo = TRUE)
+suppressMessages(library("tidyverse"))
+library(kableExtra)
+
+sample_table <- read.csv('summary_all.csv')
+
+sample_table %>%
+kable( "latex", booktabs = TRUE, longtable = TRUE, caption = "Suplementary table XX") %>%
+  kable_styling(latex_options = c("hold_position", "repeat_header"),font_size = 6)
+
+
+```
+
+<!-- \elandscape -->

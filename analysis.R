@@ -108,7 +108,7 @@ if(! file.exists('data/intSites.RData')){
   saveRDS(intSites,file='data/intSites_plus0.rds')
   save(intSites, file = 'data/intSites.RData')
 } else {
-  load('data/intSites.RData')
+#  load('data/intSites.RData')
   intSites <- readRDS("data/intSites_plus0.rds")
 }
 
