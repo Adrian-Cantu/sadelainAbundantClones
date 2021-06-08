@@ -1,26 +1,237 @@
 ---
 title: "review_responses"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
 output: pdf_document
 ---
 
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+suppressMessages(library("tidyverse"))
+library(kableExtra)
+#source("fisher_exact_test.R")
+#GTSP3310 -- p1_t72
+#GTSP3311 -- p2_t72
+#GTSP3438 -- p3_t72
+#GTSP0886 -- p5_t0_1
+#GTSP0890 -- p5_t0_2
+#GTSP4185 -- P5_t70
+```
+
+# Reviewer 1
+
+## fig3 question 1
+**Add Gini, Shannon index and UC50**
+
+We have added plots of the Gini and Shannon Index values for each subject to the supplementary material. (see sample table)
+
+```{r ginifig, eval=FALSE, message=FALSE, include=FALSE}
+source("gini.R")
+```
+
+## fig3 question 2
+
+**The Authors should clearly declare the number of insertion sites retrieved for each of the analyzed samples.**
+
+See sample table.
+
+
+
+## fig3 question 4
+
+**How to account for the known bias of lentiviral vectors to integrate in expressed genes**
+
+We took the top 10% insertion sites by sonic abundance and constructed a contingency table to measure if oncogenes are over represented in the top 10% via Fisher exact test
+
+### Patient 5 time 0, 1 
+
+```{r load, include=FALSE}
 source("fisher_exact_test.R")
+driver_level_min=1
+intSites <- readRDS("data/intSites_plus0.rds")
+intSitesTCGA <- data.frame(readRDS(paste0('data/intSitesTCGA_',driver_level_min,'.rds')))
 ```
 
 
+```{r fisher_Test_values, include=FALSE}
+p5_t0_1_df <- get_sample_df('GTSP0886',intSitesTCGA)
+p5_t0_2_df <- get_sample_df('GTSP0890',intSitesTCGA)
+p5_t70_df <- get_sample_df('GTSP4185',intSitesTCGA)
+p1_t72_df <- get_sample_df('GTSP3310',intSitesTCGA)
+p2_t72_df <- get_sample_df('GTSP3311',intSitesTCGA)
+p3_t72_df <- get_sample_df('GTSP3438',intSitesTCGA)
+cont_table <-data.frame(
+  "type" = c("onco_yes", "onco_no"),
+  "P5_t0_1"=get_2sample_mat(p5_t0_1_df,p1_t72_df)$s1,
+  "P5_t0_2"=get_2sample_mat(p5_t0_2_df,p1_t72_df)$s1,
+  "P1_t72"=get_2sample_mat(p5_t0_1_df,p1_t72_df)$s2,
+  "P2_t72"=get_2sample_mat(p5_t0_1_df,p2_t72_df)$s2,
+  "P3_t72"=get_2sample_mat(p5_t0_1_df,p3_t72_df)$s2,
+  "P5_t70"=get_2sample_mat(p5_t0_1_df,p5_t70_df)$s2
+)
+```
+
+```{r pval_table, echo=FALSE}
 
 
+p_val_table %>% kable( booktabs = TRUE, digits=3, caption = "Suplementary table XX") %>% kable_styling(latex_options = c("striped", "HOLD_position"))
+```
 
-```{r pressure, echo=FALSE}
+```{r cont_table1, echo=FALSE}
+cont_table %>% kable( booktabs = TRUE, digits=3, caption = "Suplementary table XX") %>% kable_styling(latex_options = c("striped", "HOLD_position"))
+cont_table %>% mutate_if(is.numeric, ~ .x/sum(.)) %>% kable( booktabs = TRUE, digits=3, caption = "Suplementary table XX") %>% kable_styling(latex_options = c("striped", "HOLD_position"))
+```
+
+
+```{r fig_p5_t0_1, eval=FALSE}
 sample_name <- "GTSP0886"
-sample_df <- get_sample_df(sample_name)
+sample_df <- get_sample_df(sample_name,intSites)
 sample_mat <- get_f_mat(sample_df)
-chisq.test(sample_mat)$expected
-chisq.test(sample_mat)
 fisher.test(sample_mat)
-
 get_sample_figure(sample_df)
 ```
+\newpage
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+### Patient 5 time 0, 2 
+
+```{r fig_p5_t0_2, eval=FALSE}
+sample_name <- "GTSP0890"
+sample_df <- get_sample_df(sample_name,intSites)
+sample_mat <- get_f_mat(sample_df)
+fisher.test(sample_mat)
+get_sample_figure(sample_df)
+```
+\newpage
+
+### Patient 5 time 70 
+
+```{r fig_p5_t70, eval=FALSE}
+sample_name <- "GTSP4185"
+sample_df <- get_sample_df(sample_name,intSites)
+sample_mat <- get_f_mat(sample_df)
+fisher.test(sample_mat)
+get_sample_figure(sample_df)
+```
+\newpage
+
+### Patient 1 time 72 
+
+```{r fig_p1_t72, eval=FALSE}
+sample_name <- "GTSP3310"
+sample_df <- get_sample_df(sample_name,intSites)
+sample_mat <- get_f_mat(sample_df)
+fisher.test(sample_mat)
+get_sample_figure(sample_df)
+```
+\newpage
+
+### Patient 2 time 72 
+
+```{r fig_p2_t72, eval=FALSE}
+sample_name <- "GTSP3311"
+sample_df <- get_sample_df(sample_name,intSites)
+sample_mat <- get_f_mat(sample_df)
+fisher.test(sample_mat)
+get_sample_figure(sample_df)
+```
+\newpage
+
+### Patient 3 time 72 
+
+```{r fig_p3_t72, eval=FALSE}
+sample_name <- "GTSP3438"
+sample_df <- get_sample_df(sample_name,intSites)
+sample_mat <- get_f_mat(sample_df)
+fisher.test(sample_mat)
+get_sample_figure(sample_df)
+```
+\newpage
+
+## fig3 question 3
+
+**Repeat the analysis using other gene classes and reviewed cancer database**
+
+Using oncovar TCGA genes with driver level 1 or more. 3,487 total genes.
+
+### Patient 5 time 0, 1
+
+```{r fig_p5_t0_1_bis, eval=FALSE}
+sample_name <- "GTSP0886"
+sample_df <- get_sample_df(sample_name,intSitesTCGA)
+sample_mat <- get_f_mat(sample_df)
+fisher.test(sample_mat)
+get_sample_figure(sample_df)
+```
+\newpage
+
+### Patient 5 time 0, 2 
+
+```{r fig_p5_t0_2_bis, eval=FALSE}
+sample_name <- "GTSP0890"
+sample_df <- get_sample_df(sample_name,intSitesTCGA)
+sample_mat <- get_f_mat(sample_df)
+fisher.test(sample_mat)
+get_sample_figure(sample_df)
+```
+\newpage
+
+### Patient 5 time 70 
+
+```{r fig_p5_t70_bis, eval=FALSE}
+sample_name <- "GTSP4185"
+sample_df <- get_sample_df(sample_name,intSitesTCGA)
+sample_mat <- get_f_mat(sample_df)
+fisher.test(sample_mat)
+get_sample_figure(sample_df)
+```
+\newpage
+
+### Patient 1 time 72 
+
+```{r fig_p1_t72_bis, eval=FALSE}
+sample_name <- "GTSP3310"
+sample_df <- get_sample_df(sample_name,intSitesTCGA)
+sample_mat <- get_f_mat(sample_df)
+fisher.test(sample_mat)
+get_sample_figure(sample_df)
+```
+\newpage
+
+### Patient 2 time 72 
+
+```{r fig_p2_t72_bis, eval=FALSE}
+sample_name <- "GTSP3311"
+sample_df <- get_sample_df(sample_name,intSitesTCGA)
+sample_mat <- get_f_mat(sample_df)
+fisher.test(sample_mat)
+get_sample_figure(sample_df)
+```
+\newpage
+
+### Patient 3 time 72 
+
+```{r fig_p3_t72_bis, eval=FALSE}
+sample_name <- "GTSP3438"
+sample_df <- get_sample_df(sample_name,intSitesTCGA)
+sample_mat <- get_f_mat(sample_df)
+fisher.test(sample_mat)
+get_sample_figure(sample_df)
+```
+\newpage
+
+
+
+## fig3 question 5
+**Statistics for single genes are missing.**
+
+We have published statistical methods based on scan statistics for identifying clusters of integration sites. Here we find xxx
+
+## fig3 question 6
+**Marking levels are between 0.01 and 0.08 for PBMCs. Then the \>1\% abundance. relative to the transformed cells is really 0.0008\% relative to all PBMCs. How does this affect the analysis of integration sites? The definition of dominant clone seems to be an overestimation.**
+
+We have further developed the annotation of dominant clones in and added new analysis to the paper. We carried out a simulation xxx
+
+## fig3 question 7
+**Can we discriminate between relative abundance of 1\% and 2\%?**
+This was already addressed in (Sherman et al. 2017)
+

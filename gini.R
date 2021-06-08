@@ -1,4 +1,4 @@
-library(tidyverse)
+suppressMessages(library(tidyverse))
 library(RMySQL)
 library(gt23)
 #library(STRINGdb)
@@ -47,9 +47,9 @@ g2 <- ggplot(data=df, aes(x=timePointMonths, y=Entropy, group=patient,color=pati
   geom_point()
  
 g <- rbind(ggplotGrob(g1), ggplotGrob(g2), size = "first")
-dev.off()
-png(height = 4, width = 6,units = 'in', res=300, file = 'output/EntGin.png')
-grid.newpage()
+# dev.off()
+# png(height = 4, width = 6,units = 'in', res=300, file = 'output/EntGin.png')
+# grid.newpage()
 grid.draw(g)
-dev.off()
+# dev.off()
 

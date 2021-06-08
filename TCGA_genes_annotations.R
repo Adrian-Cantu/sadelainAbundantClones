@@ -10,7 +10,7 @@ library(conover.test)
 
 # Create an expanded oncogene list.
 oncoGeneList <- toupper(c('UBR2', gt23::hg38.oncoGeneList))
-driver_level_min <- 4
+driver_level_min <- 1
 
 TCGA_table <- read.delim('TCGA.PanCancer.all.genes.OncoVar.tsv')
 TCGA_lvl4_oncogenes_table <- TCGA_table %>% filter(Driver.Level>=driver_level_min)
@@ -85,7 +85,7 @@ if(! file.exists('data/intSites_raw.rds')){
 used_samples <- data.frame(intSites_raw) %>% group_by(timePointMonths,GTSP,patient) %>% summarize(uni=n(),total=sum(estAbund))
 
 if(! file.exists(paste0('data/intSitesTCGA_',driver_level_min,'.rds'))){
-  intSitesTCGA <- intSites_raw %>% annotateIntSites(oncoGeneList = ICGC_lvl4_oncogenes_list)
+  intSitesTCGA <- intSites_raw %>% annotateIntSites(oncoGeneList = TCGA_lvl4_oncogenes_list)
   saveRDS(intSitesTCGA,file=paste0('data/intSitesTCGA_',driver_level_min,'.rds'))
 } else {
   intSitesTCGA <- readRDS(paste0('data/intSitesTCGA_',driver_level_min,'.rds'))
@@ -100,8 +100,9 @@ if(! file.exists(paste0('data/intSitesTCGA_',driver_level_min,'.rds'))){
 
 
 intSitesTCGA_reduced <- data.frame(intSitesTCGA) %>%
-  filter(patient== 'pPatient5' & nearestOncoFeature!="None.found") %>%
-  transmute(patient=patient,GTSP=GTSP,timePointMonths=timePointMonths,relAbund=relAbund,nearestOncoFeature=nearestOncoFeature)
+  filter(patient== 'pPatient5' & nearestOncoFeature!="None.found" & abs(nearestOncoFeatureDist) <= 50000) %>%
+  transmute(patient=patient,GTSP=GTSP,timePointMonths=timePointMonths,
+            relAbund=relAbund,nearestOncoFeature=nearestOncoFeature)
 
 #kk <- intSitesTCGA_reduced %>% filter(timePointMonths==70) %>% filter(nearestOncoFeature=='FATT1')
 
@@ -154,6 +155,19 @@ conover.test(pdata$values,pdata$ind,method='sidak')
 pdata <- stack(list(o70=o70,o0_1=o0_1,o0_2=o0_2,o30=o30,o36=o36))
 conover.test(pdata$values,pdata$ind,method='sidak')
 
+nonzero <- o70!=0 | o0_1!=0
+pdata <- stack(list(o70=o70[nonzero],o0_1=o0_1[nonzero]))
+wilcox.test(values ~ ind,data = pdata,paired=TRUE)
+
+
+nonzero <- o70!=0 | o0_2!=0
+pdata <- stack(list(o70=o70[nonzero],o0_2=o0_2[nonzero]))
+wilcox.test(values ~ ind,data = pdata,paired=TRUE)
+
+nonzero <- o0_1!=0 | o0_2!=0
+pdata <- stack(list(o0_2=o0_2[nonzero],o0_1=o0_1[nonzero]))
+wilcox.test(values ~ ind,data = pdata,paired=TRUE)
+
 
 # # def def --------- 
 # intSites$patient <- sub('^p', '', intSites$patient)
@@ -172,4 +186,3 @@ conover.test(pdata$values,pdata$ind,method='sidak')
 #   filter(cellsPerSample >= 100)
 # 
 # intSites$nearestFeature <- toupper(intSites$nearestFeature)
-# saveRDS(intSites,file='data/intSites_plussss.rds')
