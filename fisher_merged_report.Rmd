@@ -12,7 +12,7 @@ header-includes:
 knitr::opts_chunk$set(echo = TRUE)
 suppressMessages(library("tidyverse"))
 library(kableExtra)
-source("fisher_exact_test.R")
+source("merged_fisher_exact_test.R")
 library(pander)
 #driver_level_min=1
 intSites <- readRDS("data/merged_intSites_gt23_UBR2.rds")
@@ -20,23 +20,16 @@ intSitesTCGA_1 <- data.frame(readRDS('data/merged_intSitesTCGA_1.rds'))
 intSitesTCGA_2 <- data.frame(readRDS('data/merged_intSitesTCGA_2.rds'))
 intSitesTCGA_3 <- data.frame(readRDS('data/merged_intSitesTCGA_3.rds'))
 intSitesTCGA_4 <- data.frame(readRDS('data/merged_intSitesTCGA_4.rds'))
+intSitesTCGA_UBR2_1 <- data.frame(readRDS('data/merged_intSitesTCGA_UBR2_1.rds'))
+intSitesTCGA_UBR2_2 <- data.frame(readRDS('data/merged_intSitesTCGA_UBR2_2.rds'))
+intSitesTCGA_UBR2_3 <- data.frame(readRDS('data/merged_intSitesTCGA_UBR2_3.rds'))
+intSitesTCGA_UBR2_4 <- data.frame(readRDS('data/merged_intSitesTCGA_UBR2_4.rds'))
 ```
 
 
 Fisher exact p-test was performed to compare the prevalence of insertion sites near oncogenes in pre-infusion samples (time 0) versus samples at time point ~6 years. We consider two ways of counting the insertion sites, Simple counts (where each observed insertion site counts only once) and Sonic abundance counts (where each observed insertion site counts a number of times equal to its sonic abundance).
 
 
-```{r sample_table, echo=FALSE}
-sample_table <- read.csv('summary_all.csv')
-used <- c('GTSP0886','GTSP0890','GTSP4185','GTSP3310','GTSP3311','GTSP3438')
-sample_table %>% 
-  filter(GTSP %in% used) %>%
-  transmute(GTSP=GTSP,SampleName=c('P1_t72','P2_t72','P3_t72','P5_t0_1','P5_t0_2','P5_t70'),Timepoint=Timepoint,patient=sub('^p', '',patient),InferredCells=InferredCells,UniqueSites=UniqueSites ) %>%
-kable( "latex", booktabs = TRUE, longtable = TRUE, caption = "Used samples") %>%
-  kable_styling(latex_options = c("hold_position"))
-
-
-```
 
 For oncogenes definitions (Databases) we use the "Bushman lab oncogenes database" and four levels of The Cancer Genome Atlas (TCGA) version of the OncoVar database. Each gene in the OncoVar database is assigned a "driver level" score, a number 0-4 that quantifies the evidence for a gene being oncogenic (a level 4 gene is most likely oncogenic, while a level 1 only has little evidence and a level 0 none). Significant values for the Fisher test are marked red.
 
@@ -44,8 +37,14 @@ For oncogenes definitions (Databases) we use the "Bushman lab oncogenes database
 \newpage
 ```{r b_lab_data, echo=FALSE, results='asis'}
 
-current_intsites <- intSites
-pandoc.header("Busman lab database", level = 1)
+
+intsite_list <- list(intSites,intSitesTCGA_1,intSitesTCGA_2,intSitesTCGA_3,intSitesTCGA_4,intSitesTCGA_UBR2_1,intSitesTCGA_UBR2_2,intSitesTCGA_UBR2_3,intSitesTCGA_UBR2_4)
+header_list <- c("Busman lab database","OncoVar level 1","OncoVar level 2","OncoVar level 3","OncoVar level 4",
+                 "OncoVar level 1 plus UBR2","OncoVar level 2 plus UBR2","OncoVar level 3 plus UBR2","OncoVar level 4 plus UBR2")
+
+invisible(sapply(c(1:9), function(x) {
+current_intsites <- intsite_list[[x]]
+pandoc.header(header_list[x], level = 1)
 
 p_val_table <- get_pval_table(current_intsites)
 cont_table <- get_cont_table(current_intsites)
@@ -54,9 +53,8 @@ p_val_table_w <- get_pval_table_w(current_intsites)
 cont_table_w <- get_cont_table_w(current_intsites)
 
 
-t_p_val_table <- p_val_table %>% kable( booktabs = TRUE, digits=5, caption = "pvalue simple counts") %>% kable_styling(latex_options = c("striped", "HOLD_position")) %>% column_spec(3,color=ifelse(p_val_table$P5_t0_2<=0.05,'red','black')) %>% column_spec(2,color=ifelse(p_val_table$P5_t0_1<=0.05,'red','black'))
-t_p_val_table_w <- p_val_table_w %>% kable( booktabs = TRUE, digits=5, caption = "pvalue Sonic abundance") %>% kable_styling(latex_options = c("striped", "HOLD_position")) %>% column_spec(3,color=ifelse(p_val_table_w$P5_t0_2<=0.05,'red','black')) %>% column_spec(2,color=ifelse(p_val_table_w$P5_t0_1<=0.05,'red','black'))
-
+t_p_val_table <- p_val_table %>% kable( booktabs = TRUE, digits=5, caption = "pvalue simple counts") %>% kable_styling(latex_options = c("striped", "HOLD_position")) %>% column_spec(2,color=ifelse(p_val_table$P5_t0<=0.05,'red','black'))
+t_p_val_table_w <- p_val_table_w %>% kable( booktabs = TRUE, digits=5, caption = "pvalue Sonic abundance") %>% kable_styling(latex_options = c("striped", "HOLD_position")) %>% column_spec(2,color=ifelse(p_val_table_w$P5_t0<=0.05,'red','black'))
 cat(c("\\begin{table}[!htb]
     \\begin{minipage}{.5\\linewidth}
       \\caption{}
@@ -72,52 +70,15 @@ cat(c("\\begin{table}[!htb]
 ))  
 
 
-cont_table %>% kable( booktabs = TRUE, digits=3, caption = "simple counts") %>% kable_styling(latex_options = c("striped", "HOLD_position"))
-cont_table %>% mutate_if(is.numeric, ~ .x/sum(.)) %>% kable( booktabs = TRUE, digits=3, caption = "simple counts proportions") %>% kable_styling(latex_options = c("striped", "HOLD_position"))
-
-cont_table_w %>% kable( booktabs = TRUE, digits=3, caption = "Sonic abundance counts") %>% kable_styling(latex_options = c("striped", "HOLD_position"))
-cont_table_w %>% mutate_if(is.numeric, ~ .x/sum(.)) %>% kable( booktabs = TRUE, digits=3, caption = "Sonic abundance proportions") %>% kable_styling(latex_options = c("striped", "HOLD_position"))
+cat(cont_table %>% kable( booktabs = TRUE, digits=3, caption = "simple counts") %>% kable_styling(latex_options = c("striped", "HOLD_position")),
+cont_table %>% mutate_if(is.numeric, ~ .x/sum(.)) %>% kable( booktabs = TRUE, digits=3, caption = "simple counts proportions") %>% kable_styling(latex_options = c("striped", "HOLD_position")),
+cont_table_w %>% kable( booktabs = TRUE, digits=3, caption = "Sonic abundance counts") %>% kable_styling(latex_options = c("striped", "HOLD_position")),
+cont_table_w %>% mutate_if(is.numeric, ~ .x/sum(.)) %>% kable( booktabs = TRUE, digits=3, caption = "Sonic abundance proportions") %>% kable_styling(latex_options = c("striped", "HOLD_position")))
 cat('\\newpage')
+}))
 ```
 
 
-
-```{r oncovar_4, echo=FALSE, results='asis'}
-current_intsites <- intSitesTCGA_4
-pandoc.header("OncoVar lvl 4", level = 1)
-
-p_val_table <- get_pval_table(current_intsites)
-cont_table <- get_cont_table(current_intsites)
-
-p_val_table_w <- get_pval_table_w(current_intsites)
-cont_table_w <- get_cont_table_w(current_intsites)
-
-
-t_p_val_table <- p_val_table %>% kable( booktabs = TRUE, digits=5, caption = "pvalue simple counts") %>% kable_styling(latex_options = c("striped", "HOLD_position")) %>% column_spec(3,color=ifelse(p_val_table$P5_t0_2<=0.05,'red','black')) %>% column_spec(2,color=ifelse(p_val_table$P5_t0_1<=0.05,'red','black'))
-t_p_val_table_w <- p_val_table_w %>% kable( booktabs = TRUE, digits=5, caption = "pvalue Sonic abundance") %>% kable_styling(latex_options = c("striped", "HOLD_position")) %>% column_spec(3,color=ifelse(p_val_table_w$P5_t0_2<=0.05,'red','black')) %>% column_spec(2,color=ifelse(p_val_table_w$P5_t0_1<=0.05,'red','black'))
-
-cat(c("\\begin{table}[!htb]
-    \\begin{minipage}{.5\\linewidth}
-      \\caption{}
-      \\centering",
-        t_p_val_table,
-    "\\end{minipage}%
-    \\begin{minipage}{.5\\linewidth}
-      \\centering
-        \\caption{}",
-        t_p_val_table_w,
-    "\\end{minipage} 
-\\end{table}"
-))  
-
-
-cont_table %>% kable( booktabs = TRUE, digits=3, caption = "simple counts") %>% kable_styling(latex_options = c("striped", "HOLD_position"))
-cont_table %>% mutate_if(is.numeric, ~ .x/sum(.)) %>% kable( booktabs = TRUE, digits=3, caption = "simple counts proportions") %>% kable_styling(latex_options = c("striped", "HOLD_position"))
-
-cont_table_w %>% kable( booktabs = TRUE, digits=3, caption = "Sonic abundance counts") %>% kable_styling(latex_options = c("striped", "HOLD_position"))
-cont_table_w %>% mutate_if(is.numeric, ~ .x/sum(.)) %>% kable( booktabs = TRUE, digits=3, caption = "Sonic abundance proportions") %>% kable_styling(latex_options = c("striped", "HOLD_position"))
-cat('\\newpage')
-```
 
 
 # Comments

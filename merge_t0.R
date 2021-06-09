@@ -39,6 +39,16 @@ sapply(c(1:4), function(driver_level_min){
   }
 })
 
+sapply(c(1:4), function(driver_level_min){
+  TCGA_lvl4_oncogenes_table <- TCGA_table %>% filter(Driver.Level>=driver_level_min)
+  TCGA_lvl4_oncogenes_list <- toupper(c('UBR2',as.character(TCGA_lvl4_oncogenes_table$Gene_symbol)))
+  if(! file.exists(paste0('data/merged_intSitesTCGA_UBR2_',driver_level_min,'.rds'))){
+    intSitesTCGA <- all_intsites %>% annotateIntSites(oncoGeneList = TCGA_lvl4_oncogenes_list)
+    saveRDS(intSitesTCGA,file=paste0('data/merged_intSitesTCGA_UBR2_',driver_level_min,'.rds'))
+  }
+})
+
+
 
 if(! file.exists(paste0('data/merged_intSites_gt23_UBR2.rds'))){
   intSites <- all_intsites %>% annotateIntSites(oncoGeneList = oncoGeneList )

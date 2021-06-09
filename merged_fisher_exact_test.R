@@ -65,20 +65,18 @@ get_2sample_mat_w <- function(x,y) {
 
 get_cont_table <- function(intsites) {
   intsites <- data.frame(intsites)
-  p5_t0_1_df <- get_sample_df('GTSP0886',intsites)
-  p5_t0_2_df <- get_sample_df('GTSP0890',intsites)
+  p5_t0_df <- get_sample_df('Fussed_t0',intsites)
   p5_t70_df <- get_sample_df('GTSP4185',intsites)
   p1_t72_df <- get_sample_df('GTSP3310',intsites)
   p2_t72_df <- get_sample_df('GTSP3311',intsites)
   p3_t72_df <- get_sample_df('GTSP3438',intsites)
   cont_table <-data.frame(
     "type" = c("onco_yes", "onco_no"),
-    "P5_t0_1"=get_2sample_mat(p5_t0_1_df,p1_t72_df)$s1,
-    "P5_t0_2"=get_2sample_mat(p5_t0_2_df,p1_t72_df)$s1,
-    "P1_t72"=get_2sample_mat(p5_t0_1_df,p1_t72_df)$s2,
-    "P2_t72"=get_2sample_mat(p5_t0_1_df,p2_t72_df)$s2,
-    "P3_t72"=get_2sample_mat(p5_t0_1_df,p3_t72_df)$s2,
-    "P5_t70"=get_2sample_mat(p5_t0_1_df,p5_t70_df)$s2
+    "P5_t0"=get_2sample_mat(p5_t0_df,p1_t72_df)$s1,
+    "P1_t72"=get_2sample_mat(p5_t0_df,p1_t72_df)$s2,
+    "P2_t72"=get_2sample_mat(p5_t0_df,p2_t72_df)$s2,
+    "P3_t72"=get_2sample_mat(p5_t0_df,p3_t72_df)$s2,
+    "P5_t70"=get_2sample_mat(p5_t0_df,p5_t70_df)$s2
   )
   return(cont_table)
 }
@@ -86,20 +84,18 @@ get_cont_table <- function(intsites) {
 
 get_cont_table_w <- function(intsites) {
   intsites <- data.frame(intsites)
-  p5_t0_1_df <- get_sample_df('GTSP0886',intsites)
-  p5_t0_2_df <- get_sample_df('GTSP0890',intsites)
+  p5_t0_df <- get_sample_df('Fussed_t0',intsites)
   p5_t70_df <- get_sample_df('GTSP4185',intsites)
   p1_t72_df <- get_sample_df('GTSP3310',intsites)
   p2_t72_df <- get_sample_df('GTSP3311',intsites)
   p3_t72_df <- get_sample_df('GTSP3438',intsites)
   cont_table <-data.frame(
     "type" = c("onco_yes", "onco_no"),
-    "P5_t0_1"=get_2sample_mat_w(p5_t0_1_df,p1_t72_df)$s1,
-    "P5_t0_2"=get_2sample_mat_w(p5_t0_2_df,p1_t72_df)$s1,
-    "P1_t72"=get_2sample_mat_w(p5_t0_1_df,p1_t72_df)$s2,
-    "P2_t72"=get_2sample_mat_w(p5_t0_1_df,p2_t72_df)$s2,
-    "P3_t72"=get_2sample_mat_w(p5_t0_1_df,p3_t72_df)$s2,
-    "P5_t70"=get_2sample_mat_w(p5_t0_1_df,p5_t70_df)$s2
+    "P5_t0"=get_2sample_mat_w(p5_t0_df,p1_t72_df)$s1,
+    "P1_t72"=get_2sample_mat_w(p5_t0_df,p1_t72_df)$s2,
+    "P2_t72"=get_2sample_mat_w(p5_t0_df,p2_t72_df)$s2,
+    "P3_t72"=get_2sample_mat_w(p5_t0_df,p3_t72_df)$s2,
+    "P5_t70"=get_2sample_mat_w(p5_t0_df,p5_t70_df)$s2
   )
   return(cont_table)
 }
@@ -107,52 +103,36 @@ get_cont_table_w <- function(intsites) {
 
 get_pval_table <- function(intsites) {
   intsites <- data.frame(intsites)
-  p5_t0_1_df <- get_sample_df('GTSP0886',intsites)
-  p5_t0_2_df <- get_sample_df('GTSP0890',intsites)
+  p5_t0_df <- get_sample_df('Fussed_t0',intsites)
   p5_t70_df <- get_sample_df('GTSP4185',intsites)
   p1_t72_df <- get_sample_df('GTSP3310',intsites)
   p2_t72_df <- get_sample_df('GTSP3311',intsites)
   p3_t72_df <- get_sample_df('GTSP3438',intsites)  
     p_val_table <-data.frame(
-      "P5_t0_1"=c(fisher.test(get_2sample_mat(p5_t0_1_df,p5_t0_2_df))$p.value,
-              fisher.test(get_2sample_mat(p5_t0_1_df,p1_t72_df))$p.value,
-              fisher.test(get_2sample_mat(p5_t0_1_df,p2_t72_df))$p.value,
-              fisher.test(get_2sample_mat(p5_t0_1_df,p3_t72_df))$p.value,
-              fisher.test(get_2sample_mat(p5_t0_1_df,p5_t70_df))$p.value
+      "P5_t0"=c(fisher.test(get_2sample_mat(p5_t0_df,p1_t72_df))$p.value,
+              fisher.test(get_2sample_mat(p5_t0_df,p2_t72_df))$p.value,
+              fisher.test(get_2sample_mat(p5_t0_df,p3_t72_df))$p.value,
+              fisher.test(get_2sample_mat(p5_t0_df,p5_t70_df))$p.value
       ),
-      "P5_t0_2"=c(1,
-              fisher.test(get_2sample_mat(p5_t0_2_df,p1_t72_df))$p.value,
-              fisher.test(get_2sample_mat(p5_t0_2_df,p2_t72_df))$p.value,
-              fisher.test(get_2sample_mat(p5_t0_2_df,p3_t72_df))$p.value,
-              fisher.test(get_2sample_mat(p5_t0_2_df,p5_t70_df))$p.value
-      ),
-      row.names = c("P5_t0_2","P1_t72","P2_t72","P3_t72","P5_t70")
+      row.names = c("P1_t72","P2_t72","P3_t72","P5_t70")
     )
     return(p_val_table)
 }
 
 get_pval_table_w <- function(intsites) {
   intsites <- data.frame(intsites)
-  p5_t0_1_df <- get_sample_df('GTSP0886',intsites)
-  p5_t0_2_df <- get_sample_df('GTSP0890',intsites)
+  p5_t0_df <- get_sample_df('Fussed_t0',intsites)
   p5_t70_df <- get_sample_df('GTSP4185',intsites)
   p1_t72_df <- get_sample_df('GTSP3310',intsites)
   p2_t72_df <- get_sample_df('GTSP3311',intsites)
   p3_t72_df <- get_sample_df('GTSP3438',intsites)  
   p_val_table <-data.frame(
-    "P5_t0_1"=c(fisher.test(get_2sample_mat_w(p5_t0_1_df,p5_t0_2_df))$p.value,
-                fisher.test(get_2sample_mat_w(p5_t0_1_df,p1_t72_df))$p.value,
-                fisher.test(get_2sample_mat_w(p5_t0_1_df,p2_t72_df))$p.value,
-                fisher.test(get_2sample_mat_w(p5_t0_1_df,p3_t72_df))$p.value,
-                fisher.test(get_2sample_mat_w(p5_t0_1_df,p5_t70_df))$p.value
+    "P5_t0"=c(fisher.test(get_2sample_mat_w(p5_t0_df,p1_t72_df))$p.value,
+                fisher.test(get_2sample_mat_w(p5_t0_df,p2_t72_df))$p.value,
+                fisher.test(get_2sample_mat_w(p5_t0_df,p3_t72_df))$p.value,
+                fisher.test(get_2sample_mat_w(p5_t0_df,p5_t70_df))$p.value
     ),
-    "P5_t0_2"=c(1,
-                fisher.test(get_2sample_mat_w(p5_t0_2_df,p1_t72_df))$p.value,
-                fisher.test(get_2sample_mat_w(p5_t0_2_df,p2_t72_df))$p.value,
-                fisher.test(get_2sample_mat_w(p5_t0_2_df,p3_t72_df))$p.value,
-                fisher.test(get_2sample_mat_w(p5_t0_2_df,p5_t70_df))$p.value
-    ),
-    row.names = c("P5_t0_2","P1_t72","P2_t72","P3_t72","P5_t70")
+    row.names = c("P1_t72","P2_t72","P3_t72","P5_t70")
   )
   return(p_val_table)
 }
