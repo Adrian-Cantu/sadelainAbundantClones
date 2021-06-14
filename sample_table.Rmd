@@ -12,16 +12,30 @@ header-includes:
 
 <!-- \blandscape -->
 
-```{r setup, results='asis'}
+```{r setup, results='asis',echo=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+
+
 suppressMessages(library(GenomicRanges))
-knitr::opts_chunk$set(echo = TRUE)
 suppressMessages(library("tidyverse"))
 library(kableExtra)
 
-sample_table <- read.csv('summary_all.csv')
+# this is a combination of the original samples plus the 3 extra times 0
+s <- c('GTSP1393','GTSP1699','GTSP2180','GTSP3310','GTSP3437','GTSP1395','GTSP1701',
+       'GTSP3622','GTSP2181','GTSP3311','GTSP1599','GTSP3309','GTSP3438','GTSP3626',
+       'GTSP3306','GTSP3308','GTSP3440', #original
+       'GTSP0886','GTSP0887','GTSP4185', # added time 0 and 5y for patient 5
+       'GTSP4268','GTSP4269','GTSP4270' #new times 0
+       )
 
-sample_table %>%
-kable( "latex", booktabs = TRUE, longtable = TRUE, caption = "Suplementary table XX") %>%
+
+sample_table <- read.csv('summary_all.csv')
+sample_table$patient <- sub('^p', '', sample_table$patient)
+f_table <- sample_table %>% filter(GTSP %in% s) %>% mutate(dataSource=NULL, Included= NULL) %>% arrange(patient, Timepoint)
+
+openxlsx::write.xlsx(f_table, file = 'output/sample_table.xlsx')
+
+f_table %>% kable( "latex", booktabs = TRUE, longtable = TRUE, caption = "Suplementary table XX") %>%
   kable_styling(latex_options = c("hold_position", "repeat_header"),font_size = 6)
 
 
