@@ -1,0 +1,328 @@
+---
+title: "database fisher test"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: pdf_document
+name: "Adrian Cantu"
+header-includes:
+    - \usepackage[labelformat=empty]{caption}
+    - \usepackage{graphicx}
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+suppressMessages(library("tidyverse"))
+library(kableExtra)
+#source("merged_fisher_exact_test.R")
+library(pander)
+library(ggrepel)
+#driver_level_min=1
+intSites <- data.frame(readRDS("merged_data/merged_intSites_gt23_UBR2.rds"))
+intSitesTCGA_1 <- data.frame(readRDS('merged_data/merged_intSitesTCGA_1.rds'))
+intSitesTCGA_2 <- data.frame(readRDS('merged_data/merged_intSitesTCGA_2.rds'))
+intSitesTCGA_3 <- data.frame(readRDS('merged_data/merged_intSitesTCGA_3.rds'))
+intSitesTCGA_4 <- data.frame(readRDS('merged_data/merged_intSitesTCGA_4.rds'))
+intSitesTCGA_UBR2_1 <- data.frame(readRDS('merged_data/merged_intSitesTCGA_UBR2_1.rds'))
+intSitesTCGA_UBR2_2 <- data.frame(readRDS('merged_data/merged_intSitesTCGA_UBR2_2.rds'))
+intSitesTCGA_UBR2_3 <- data.frame(readRDS('merged_data/merged_intSitesTCGA_UBR2_3.rds'))
+intSitesTCGA_UBR2_4 <- data.frame(readRDS('merged_data/merged_intSitesTCGA_UBR2_4.rds'))
+```
+
+```{r set funtions,include=FALSE}
+
+get_sample_df <- function(x,intSites) {
+  intSites %>% filter(GTSP==x) %>%
+    transmute(relAbund=estAbund/sum(estAbund), rank=rank(-relAbund,ties.method='first'),
+              nearestOncoFeature=nearestOncoFeature,
+              isOnco=abs(nearestOncoFeatureDist) <= 50000,
+              isTop= rank <= floor(0.1*n()),
+              isTop10= (rank <= 10) & (isOnco),
+              estAbund=estAbund,
+              label=paste0(rank,'_',nearestOncoFeature))
+}
+
+get_2sample_mat <- function(x,y,  name1 = deparse(substitute(x)),name2 = deparse(substitute(y))) {
+  dat <- data.frame(
+    name1 = c(sum(x$isOnco), sum(!x$isOnco)),
+    name2 = c(sum(y$isOnco), sum(!y$isOnco)),
+    row.names = c("onco_yes", "onco_no"),
+    stringsAsFactors = FALSE
+  )
+  colnames(dat) <- c(name1,name2)
+  return(dat) 
+}
+
+
+get_2sample_mat_w <- function(x,y,name1 = deparse(substitute(x)),name2 = deparse(substitute(y))) {
+  dat <- data.frame(
+    "s1" = c(sum(x$isOnco * x$estAbund), sum((!x$isOnco) * x$estAbund)),
+    "s2" = c(sum(y$isOnco * y$estAbund), sum((!y$isOnco) * y$estAbund)),
+    row.names = c("onco_yes", "onco_no"),
+    stringsAsFactors = FALSE
+  )
+    colnames(dat) <- c(name1,name2)
+  return(dat) 
+}
+
+get_sample_figure <- function(x) {
+  g <- x %>% ggplot(aes(x = rank, y = relAbund)) +
+    geom_line() +
+    geom_point(aes(colour=isOnco)) + 
+    geom_text_repel( mapping= aes(label =nearestOncoFeature),
+                      data=subset(x,isTop10),
+                     angle=45,
+                     size= 2,
+                     nudge_x = 0.2 * max(x$rank),
+                     nudge_y = 0.2 * max(subset(x,isTop10)$relAbund),
+                     force = 3,
+                     segment.color = 'grey50')
+  return(g)
+}
+
+get_f_mat <- function(x) {
+  dat <- data.frame(
+    "top_yes" = c(sum(x$isTop & x$isOnco), sum(x$isTop & !x$isOnco)),
+    "top_no" = c(sum(!x$isTop & x$isOnco), sum(!x$isTop & !x$isOnco)),
+    row.names = c("onco_yes", "onco_no"),
+    stringsAsFactors = FALSE
+  )
+#  colnames(dat) <- c("Non-smoker", "Smoker")
+ return(dat) 
+}
+
+
+
+```
+Fisher exact p-test was performed to compare the prevalence of insertion sites near oncogenes in the aggregated pre-infusion samples (time 0) versus aggregated samples at time point ~6 years. We consider two ways of counting the insertion sites, Simple counts (where each observed insertion site counts only once) and Sonic abundance counts (where each observed insertion site counts a number of times equal to its sonic abundance).
+
+```{r sample_table_t0, echo=FALSE, results='asis'}
+sample_table <- read.csv('summary_all.csv')
+used_t0 <- time0 <- c('GTSP0886','GTSP0890','GTSP4268', 'GTSP4269', 'GTSP4270')
+sample_table %>% 
+  filter(GTSP %in% used_t0) %>%
+  transmute(GTSP=GTSP,Timepoint=Timepoint,patient=sub('^p', '',patient), InferredCells=InferredCells, UniqueSites=UniqueSites ) %>%
+  arrange(patient) %>%
+kable( "latex", booktabs = TRUE, longtable = TRUE, caption = "Time 0 samples") %>%
+  kable_styling(latex_options = c("hold_position"))
+
+
+```
+
+```{r sample_table, echo=FALSE, results='asis'}
+sample_table <- read.csv('summary_all.csv')
+used_t6 <- time6 <- c('GTSP3310','GTSP3311','GTSP3438','GTSP4185')
+sample_table %>% 
+  filter(GTSP %in% used_t6) %>%
+  transmute(GTSP=GTSP,Timepoint=Timepoint,patient=sub('^p', '',patient), InferredCells=InferredCells, UniqueSites=UniqueSites ) %>%
+  arrange(patient) %>%
+kable( "latex", booktabs = TRUE, longtable = TRUE, caption = "Time 6 (years) samples") %>%
+  kable_styling(latex_options = c("hold_position"))
+
+
+```
+
+
+
+For oncogenes definitions (Databases) we use the "Bushman lab oncogenes database" and four levels of The Cancer Genome Atlas (TCGA) version of the OncoVar database. Each gene in the OncoVar database is assigned a "driver level" score, a number 0-4 that quantifies the evidence for a gene being oncogenic (a level 4 gene is most likely oncogenic, while a level 1 only has little evidence and a level 0 none). The effect of adding the gene "UBR2" to the database was also explored.
+
+For each database this reports shows:
+
+1. Rank-abundance plots for the aggregated samples at time 0 and time 6, any oncogene in the top 10 ranks is labeled.
+2. Contingency tables of simple counts and proportions for oncogene/not-oncogene, time0/time6
+3. Contingency tables of Sonic Abundance counts and proportions for oncogene/not-oncogene, time0/time6
+4. The p-value for the fisher test for tables 2, 3, as well as top10\%/not-top10\%, oncogene/not-oncogene for time 0 and 6 
+
+\newpage
+```{r test_page, eval=FALSE, message=FALSE, warning=FALSE, include=FALSE, results='asis'}
+
+intsites <- data.frame(readRDS('merged_data/merged_intSitesTCGA_UBR2_4.rds'))
+
+t0_df <- get_sample_df('Fussed_t0',intsites)
+t6_df <- get_sample_df('Fussed_t6',intsites)
+
+n_sample_mat <- get_2sample_mat(t0_df,t6_df)
+n_f_test <- fisher.test(n_sample_mat)
+
+
+w_sample_mat <- get_2sample_mat_w(t0_df,t6_df)
+w_f_test <- fisher.test(w_sample_mat)
+
+t_t_0 <- get_f_mat(t0_df)
+t_t_6 <- get_f_mat(t6_df)
+t0_f_test <- fisher.test(t_t_0)
+t6_f_test <- fisher.test(t_t_6)
+
+pdf(file = "figures/test6.pdf")
+get_sample_figure(t6_df)
+invisible(dev.off())
+
+pdf(file = "figures/test0.pdf")
+get_sample_figure(t0_df)
+invisible(dev.off())
+
+cat(c("\\begin{table}[!htb]
+    \\begin{minipage}{.5\\linewidth}
+      \\caption{}
+      \\centering",
+      "T0 \\\\
+    \\includegraphics{figures/test0.pdf}",
+    "\\end{minipage}%
+    \\begin{minipage}{.5\\linewidth}
+      \\centering
+        \\caption{}",
+      " T6 \\\\
+    \\includegraphics{figures/test6.pdf}",
+    "\\end{minipage}
+\\end{table}"
+))
+
+cat(c("\\begin{table}[!htb]
+    \\begin{minipage}{.5\\linewidth}
+      \\caption{}
+      \\centering",
+      n_sample_mat %>% kable( booktabs = TRUE, digits=3, caption = "simple counts") %>% kable_styling(latex_options = c("striped", "HOLD_position")),
+    "\\end{minipage}%
+    \\begin{minipage}{.5\\linewidth}
+      \\centering
+        \\caption{}",
+      n_sample_mat %>% mutate_if(is.numeric, ~ .x/sum(.)) %>% kable( booktabs = TRUE, digits=3, caption = "simple counts proportions") %>% kable_styling(latex_options = c("striped", "HOLD_position")),
+    "\\end{minipage}
+\\end{table}"
+))
+
+cat(c("\\begin{table}[!htb]
+    \\begin{minipage}{.5\\linewidth}
+      \\caption{}
+      \\centering",
+      w_sample_mat %>% kable( booktabs = TRUE, digits=3, caption = "Sonic abundance counts") %>% kable_styling(latex_options = c("striped", "HOLD_position")),
+    "\\end{minipage}%
+    \\begin{minipage}{.5\\linewidth}
+      \\centering
+        \\caption{}",
+      w_sample_mat %>% mutate_if(is.numeric, ~ .x/sum(.)) %>% kable( booktabs = TRUE, digits=3, caption = "Sonic abundance proportions") %>% kable_styling(latex_options = c("striped", "HOLD_position")),
+    "\\end{minipage}
+\\end{table}"
+))
+
+  dat <- data.frame(
+    p_value = c(n_f_test$p.value, w_f_test$p.value,t0_f_test$p.value,t6_f_test$p.value),
+    stringsAsFactors = FALSE
+  )
+dat <- t(dat)
+colnames(dat) <- c("not weighted", "weighted","time 0 top","time 6 top")
+cat(dat %>% kable( booktabs = TRUE, digits=3, caption = "fisher test") %>% kable_styling(latex_options = c("striped", "HOLD_position")))
+cat('\\newpage')
+
+
+
+
+```
+
+
+```{r b_lab_data,echo=FALSE,warning=FALSE, message=FALSE ,results='asis'}
+intsite_list <- list(intSites,intSitesTCGA_1,intSitesTCGA_2,intSitesTCGA_3,intSitesTCGA_4,intSitesTCGA_UBR2_1,intSitesTCGA_UBR2_2,intSitesTCGA_UBR2_3,intSitesTCGA_UBR2_4)
+header_list <- c("Busman lab database","OncoVar level 1","OncoVar level 2","OncoVar level 3","OncoVar level 4",
+                 "OncoVar level 1 plus UBR2","OncoVar level 2 plus UBR2","OncoVar level 3 plus UBR2","OncoVar level 4 plus UBR2")
+
+prefix_list <- c("BL","OV1","OV2","OV3","OV4","OV1p","OV2p","OV3p","OV4p")
+
+
+invisible(sapply(c(1:9), function(x) {
+intsites <- intsite_list[[x]]
+pandoc.header(header_list[x], level = 1)
+prefix <- prefix_list[x]
+#browser()
+
+t0_df <- get_sample_df('Fussed_t0',intsites)
+t6_df <- get_sample_df('Fussed_t6',intsites)
+
+n_sample_mat <- get_2sample_mat(t0_df,t6_df)
+n_f_test <- fisher.test(n_sample_mat)
+
+
+w_sample_mat <- get_2sample_mat_w(t0_df,t6_df)
+w_f_test <- fisher.test(w_sample_mat)
+
+t_t_0 <- get_f_mat(t0_df)
+t_t_6 <- get_f_mat(t6_df)
+t0_f_test <- fisher.test(t_t_0)
+t6_f_test <- fisher.test(t_t_6)
+
+pdf(file = paste0("figures/",prefix,"_t6.pdf"))
+#png(height = 4, width = 6,units = 'in', res=300,file = paste0("figures/",prefix,"_t6.png"))
+print(get_sample_figure(t6_df))
+invisible(dev.off())
+
+pdf(file = paste0("figures/",prefix,"_t0.pdf"))
+print(get_sample_figure(t0_df))
+invisible(dev.off())
+
+cat(c("\\begin{table}[!htb]
+    \\begin{minipage}{.5\\linewidth}
+      \\caption{}
+      \\centering ",
+      "T0 \\\\
+    \\includegraphics{",paste0("figures/",prefix,"_t0.pdf"),"}",
+    "\\end{minipage}%
+    \\begin{minipage}{.5\\linewidth}
+      \\centering
+        \\caption{} ",
+      " T6 \\\\
+    \\includegraphics{",paste0("figures/",prefix,"_t6.pdf"),"} ",
+    "\\end{minipage}
+\\end{table}"
+),sep = "")
+
+cat(c("\\begin{table}[!htb]
+    \\begin{minipage}{.5\\linewidth}
+      \\caption{}
+      \\centering",
+      n_sample_mat %>% kable( booktabs = TRUE, digits=3, caption = "simple counts") %>% kable_styling(latex_options = c("striped", "HOLD_position")),
+    "\\end{minipage}%
+    \\begin{minipage}{.5\\linewidth}
+      \\centering
+        \\caption{}",
+      n_sample_mat %>% mutate_if(is.numeric, ~ .x/sum(.)) %>% kable( booktabs = TRUE, digits=3, caption = "simple counts proportions") %>% kable_styling(latex_options = c("striped", "HOLD_position")),
+    "\\end{minipage}
+\\end{table}"
+))
+
+cat(c("\\begin{table}[!htb]
+    \\begin{minipage}{.5\\linewidth}
+      \\caption{}
+      \\centering",
+      w_sample_mat %>% kable( booktabs = TRUE, digits=3, caption = "Sonic abundance counts") %>% kable_styling(latex_options = c("striped", "HOLD_position")),
+    "\\end{minipage}%
+    \\begin{minipage}{.5\\linewidth}
+      \\centering
+        \\caption{}",
+      w_sample_mat %>% mutate_if(is.numeric, ~ .x/sum(.)) %>% kable( booktabs = TRUE, digits=3, caption = "Sonic abundance proportions") %>% kable_styling(latex_options = c("striped", "HOLD_position")),
+    "\\end{minipage}
+\\end{table}"
+))
+#browser()
+  dat <- invisible(data.frame(
+    pvalue = c(n_f_test$p.value, w_f_test$p.value,t0_f_test$p.value,t6_f_test$p.value),
+    stringsAsFactors = FALSE
+  ))
+dat <- t(dat)
+colnames(dat) <- c("Simple", "Sonic","time 0 top","time 6 top")
+cat(dat %>% kable( booktabs = TRUE, digits=5, caption = "fisher test") %>% kable_styling(latex_options = c("striped", "HOLD_position")))
+
+cat('\\newpage')
+}))
+
+```
+
+
+
+
+# Comments
+
+* Using the Sonic Abundance counts better captures the differences between samples.
+* It would be hard to justify using a levels 2 or 3, either we use all genes that have some evidence of being oncogenes, or only the ones with the strongest evidence.
+* UBR2 has little effect on the results
+* This analysis suggest that clones with insertions near oncogenes are expanding
+
+
+

@@ -6,19 +6,29 @@ header-includes:
   \usepackage{longtable}
 ---
 
-Scan statistics using patient5 (later renamed patient4) time point 0 vs. all patients time point 70-72 months
+Scan statistics using aggregated time 0 vs. aggregated time 6
 
-```{r setup, results='asis'}
+```{r setup,echo=FALSE, results='asis'}
 suppressMessages(library(GenomicRanges))
 knitr::opts_chunk$set(echo = TRUE)
 suppressMessages(library("tidyverse"))
 library(kableExtra)
+library(gt23)
+library(GenomicRanges)
+library(geneRxCluster)
 
-scan_tables <- readRDS("scan_table.rds")
+intSites <- data.frame(readRDS('merged_data/merged_intSites_gt23_UBR2.rds'))
+g1 <-intSites %>% filter(GTSP=='Fussed_t0') %>% makeGRangesFromDataFrame(.)
+g2 <-intSites %>% filter(GTSP=='Fussed_t6') %>% makeGRangesFromDataFrame(.)
+results <- scanStats(g1,g2,gr1.label = "T0",gr2.label = "T6", kvals = "5L:50L") %>% GenomicRanges::as.data.frame(.)
 
-scan_tables %>%
+p_results <- results %>% filter(width < 1000000)
+
+p_results %>%
 kable( "latex", booktabs = TRUE, longtable = TRUE, caption = "Scan Statistic") %>%
   kable_styling(latex_options = c("hold_position", "repeat_header"))
+
+openxlsx::write.xlsx(p_results, file = 'output/scan_table.xlsx')
 
 
 ```

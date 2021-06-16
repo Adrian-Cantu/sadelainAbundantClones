@@ -24,7 +24,7 @@ library(kableExtra)
 s <- c('GTSP1393','GTSP1699','GTSP2180','GTSP3310','GTSP3437','GTSP1395','GTSP1701',
        'GTSP3622','GTSP2181','GTSP3311','GTSP1599','GTSP3309','GTSP3438','GTSP3626',
        'GTSP3306','GTSP3308','GTSP3440', #original
-       'GTSP0886','GTSP0887','GTSP4185', # added time 0 and 5y for patient 5
+       'GTSP0886','GTSP0890','GTSP4185', # added time 0 and 5y for patient 5
        'GTSP4268','GTSP4269','GTSP4270' #new times 0
        )
 
